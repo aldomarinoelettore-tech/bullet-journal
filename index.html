@@ -90,8 +90,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const COLORS = ['#7F77DD','#1D9E75','#D85A30','#378ADD','#D4537E','#BA7517','#639922','#985F99'];
-const SYMS = ['•','○','✗','→'];
-const SYM_LABEL = {'•':'Tarea','○':'Evento','✗':'Cancelada','→':'Migrada'};
+const SYMS = ['•','○','✗','→','✓'];
+const SYM_LABEL = {'•':'Tarea','○':'Evento','✗':'Cancelada','→':'Migrada','✓':'Completada'};
 
 let currentView = 'dashboard';
 let currentProjectId = null;
@@ -299,7 +299,7 @@ async function renderDaily(){
       <div id="entries-list">
         ${(entries||[]).map(e=>`
           <div class="entry-row">
-            <span class="sym" title="Completar" onclick="toggleEntry('${e.id}','${e.sym}',${e.done})">${e.sym}</span>
+            <span class="sym" title="Completar" onclick="toggleEntry('${e.id}','${e.sym}',${e.done})" style="color:${e.sym==='✓'?'#1D9E75':'inherit'}">${e.sym}</span>
             <span style="flex:1;font-size:14px;${e.done?'text-decoration:line-through;color:var(--text3)':''}">${esc(e.text)}</span>
             <span class="sym-label">${SYM_LABEL[e.sym]||''}</span>
             <span style="font-size:11px;color:var(--text3);flex-shrink:0">${toDisplayDate(e.date)}</span>
@@ -315,7 +315,7 @@ async function renderDaily(){
         <input type="date" id="new-entry-date" value="${selDate}" style="width:auto;flex-shrink:0"/>
         <button class="primary" onclick="addEntry()">+</button>
       </div>
-      <p class="hint">• Tarea &nbsp;○ Evento &nbsp;✗ Cancelada &nbsp;→ Migrada — clic en símbolo para completar</p>
+      <p class="hint">• Tarea &nbsp;○ Evento &nbsp;✗ Cancelada &nbsp;→ Migrada &nbsp;✓ Completada — clic en símbolo para completar</p>
     </div>
     <div class="card">
       <p class="section-title">IDEAS RÁPIDAS</p>
