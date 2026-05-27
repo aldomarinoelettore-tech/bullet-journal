@@ -228,12 +228,14 @@ async function renderProject(){
             <div class="entry-row" id="task-${t.id}">
               <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}',this.checked)" style="accent-color:${COLORS[p.color||0]};flex-shrink:0"/>
               <span style="flex:1;font-size:13px;${t.done?'text-decoration:line-through;color:var(--text3)':''}">${esc(t.text)}</span>
+              ${t.date?`<span style="font-size:11px;color:var(--text3);flex-shrink:0">${toDisplayDate(t.date)}</span>`:''}
               <button class="icon-btn" onclick="deleteTask('${t.id}')">×</button>
             </div>`).join('')}
           ${!(tasks||[]).length?'<p class="empty">Sin tareas aún.</p>':''}
         </div>
         <div class="add-row">
           <input type="text" id="new-task" placeholder="Nueva tarea..." onkeydown="if(event.key==='Enter')addTask()"/>
+          <input type="date" id="new-task-date" value="${today()}" style="width:auto;flex-shrink:0"/>
           <button class="primary" onclick="addTask()">+</button>
         </div>
       </div>
@@ -262,8 +264,9 @@ window.deleteTask = async function(id){
 };
 window.addTask = async function(){
   const inp = el('new-task');
+  const date = el('new-task-date').value || today();
   if(!inp.value.trim()) return;
-  await sb.from('tasks').insert({project_id:currentProjectId, text:inp.value.trim()});
+  await sb.from('tasks').insert({project_id:currentProjectId, text:inp.value.trim(), date});
   inp.value='';
   render();
 };
@@ -299,7 +302,7 @@ async function renderDaily(){
             <span class="sym" title="Completar" onclick="toggleEntry('${e.id}','${e.sym}',${e.done})">${e.sym}</span>
             <span style="flex:1;font-size:14px;${e.done?'text-decoration:line-through;color:var(--text3)':''}">${esc(e.text)}</span>
             <span class="sym-label">${SYM_LABEL[e.sym]||''}</span>
-            <span style="font-size:11px;color:var(--text3);flex-shrink:0">${selDate}</span>
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0">${toDisplayDate(e.date)}</span>
             <button class="icon-btn" onclick="deleteEntry('${e.id}')">×</button>
           </div>`).join('')}
         ${!(entries||[]).length?'<p class="empty">Sin entradas hoy.</p>':''}
@@ -309,6 +312,7 @@ async function renderDaily(){
           ${SYMS.map(s=>`<option value="${s}">${s}</option>`).join('')}
         </select>
         <input type="text" id="new-entry-text" placeholder="Agregar entrada..." onkeydown="if(event.key==='Enter')addEntry()"/>
+        <input type="date" id="new-entry-date" value="${selDate}" style="width:auto;flex-shrink:0"/>
         <button class="primary" onclick="addEntry()">+</button>
       </div>
       <p class="hint">• Tarea &nbsp;○ Evento &nbsp;✗ Cancelada &nbsp;→ Migrada — clic en símbolo para completar</p>
@@ -338,11 +342,14 @@ window.deleteEntry = async function(id){
   await sb.from('daily_entries').delete().eq('id',id);
   render();
 };
+function toDisplayDate(d){ const [y,m,day]=d.split('-'); return `${day}/${m}/${y}`; }
+
 window.addEntry = async function(){
   const text = el('new-entry-text').value.trim();
   const sym = el('new-sym').value;
+  const date = el('new-entry-date').value || selDate;
   if(!text) return;
-  await sb.from('daily_entries').insert({date:selDate,sym,text});
+  await sb.from('daily_entries').insert({date, sym, text});
   el('new-entry-text').value='';
   render();
 };
