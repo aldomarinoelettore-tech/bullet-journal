@@ -287,7 +287,7 @@ window.deleteProject = async function(){
 // ─── DAILY LOG ────────────────────────────────────────────
 async function renderDaily(){
   const {data:entries} = await sb.from('daily_entries').select('*').eq('date',selDate).order('created_at');
-  const {data:ideas} = await sb.from('ideas').select('*').eq('date',selDate).order('created_at');
+  const {data:allEntries} = await sb.from('daily_entries').select('*').order('date',{ascending:true}).order('created_at',{ascending:true});
 
   el('view').innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
@@ -319,19 +319,21 @@ async function renderDaily(){
       </div>
       <p class="hint">• Tarea &nbsp;○ Evento &nbsp;✗ Cancelada &nbsp;→ Migrada &nbsp;✓ Completada — clic en símbolo para completar</p>
     </div>
-    <div class="card">
-      <p class="section-title">IDEAS RÁPIDAS</p>
-      ${(ideas||[]).map(i=>`
-        <div class="entry-row">
-          <span style="font-size:16px">💡</span>
-          <span style="flex:1;font-size:13px">${esc(i.text)}</span>
-          <button class="icon-btn" onclick="deleteIdea('${i.id}')">×</button>
-        </div>`).join('')}
-      ${!(ideas||[]).length?'<p class="empty">Sin ideas hoy.</p>':''}
-      <div class="add-row">
-        <input type="text" id="new-idea-text" placeholder="Anotar idea rápida..." onkeydown="if(event.key==='Enter')addIdeaDaily()"/>
-        <button class="primary" onclick="addIdeaDaily()">+</button>
-      </div>
+
+    <div class="card" style="margin-top:12px">
+      <p class="section-title">TODAS LAS ENTRADAS</p>
+      ${(allEntries||[]).length === 0 ? '<p class="empty">Sin entradas guardadas.</p>' :
+        (allEntries||[]).map(e=>`
+          <div class="entry-row">
+            <select onchange="changeEntrySym('${e.id}',this.value)" style="width:46px;padding:3px 2px;text-align:center;font-size:16px;border:none;background:transparent;cursor:pointer;color:${e.sym==='✓'?'#1D9E75':'var(--text)'}">
+              ${SYMS.map(s=>`<option value="${s}" ${s===e.sym?'selected':''}>${s}</option>`).join('')}
+            </select>
+            <span style="flex:1;font-size:13px;${e.done?'text-decoration:line-through;color:var(--text3)':''}">${esc(e.text)}</span>
+            <span class="sym-label">${SYM_LABEL[e.sym]||''}</span>
+            <span style="font-size:11px;color:var(--text3);flex-shrink:0">${toDisplayDate(e.date)}</span>
+            <button class="icon-btn" onclick="deleteEntry('${e.id}')">×</button>
+          </div>`).join('')
+      }
     </div>`;
 }
 
